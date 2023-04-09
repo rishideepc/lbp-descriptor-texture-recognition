@@ -3,7 +3,7 @@ from skimage.feature import local_binary_pattern
 import numpy as np
 
 
-img = cv2.imread('assets/images/image_1.jpeg')              # Reading Image from source; can also be a url
+img = cv2.imread('assets/images/image_2.png')              # Reading Image from source; can also be a url
 dimensions = (400, 400)
 img = cv2.resize(img, dimensions)
 
@@ -11,16 +11,15 @@ img = cv2.resize(img, dimensions)
 #   Preprocessing Image - before LBP Feature Extraction
 #   Why?
 #   The first step is to preprocess the image to remove any noise present in it. 
-#   This can be done using a denoising filterS, such as the Gaussian filter or the median filter. 
-#   The denoising filter removes any and all noise, while preserving the texture information.
+#   This can be done using a denoising filter, such as the Gaussian filter or the median filter. 
 #   This enhances the discriminative power of the LBP descriptor, 
 #   and facilitates the Texture Recognition process.
 #   We are using the median filter in this scenario. Usage can vary depending on the type of image!
 
 
-gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)                # Method 'cvtColor' is used to convert the given original image into grayscale for further denoising
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)                # Method 'cvtColor' is used to convert the given original image into grayscale for blurring
 
-denoised = cv2.medianBlur(gray, 5)                          # Usage of 'medianBlur' filter for denoising
+blurred = cv2.medianBlur(gray, 7)                          # Usage of 'medianBlur' filter for blurring
 
 
 #   LBP Features Extraction 
@@ -34,13 +33,13 @@ denoised = cv2.medianBlur(gray, 5)                          # Usage of 'medianBl
 radius= 1                                                   # Defining LBP @param radius - float radius of circle
 n_points= 8 * radius                                        # Defining LBP @param n_points - number of circularly symmetric neighbour set points
 
-lbp = local_binary_pattern(denoised, n_points, radius)      # Implementing LBP feature extraction
+lbp = local_binary_pattern(blurred, n_points, radius)      # Implementing LBP feature extraction
 
 
 lbp = np.uint8((lbp / np.max(lbp)) * 255)                   # Converting LBP to 'uint8' and normalizing the values to fall in (0 - 255) range
 
-cv2.imshow('Original', gray)                                # Image Display ORIGINAL
-cv2.imshow('Denoised', denoised)                            # Image Display DENOISED
+cv2.imshow('Original', img)                                 # Image Display ORIGINAL
+cv2.imshow('Blurred', blurred)                              # Image Display BLURRED
 cv2.imshow('LBP', lbp)                                      # Image Display LBP Feature Extracted
 cv2.waitKey(0)
-cv2.destroyAllWindows()                         
+cv2.destroyAllWindows()                      
