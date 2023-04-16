@@ -6,29 +6,70 @@ dimensions = (400, 400)
 region_height = 20
 region_width = 20
 region_size = (region_height, region_width)
+histograms= []
+thresholded_histograms= []
+threshold_factor = 0.3
 
 
-def divide_into_regions(lbp, _region_size):
 
-    rows, cols = lbp.shape
+def divide_into_regions(_lbp, _region_size):
+    """
+    @param:
+        _lbp -  the LBP feature image, that is, matrix that contains the LBP values for each pixel in the original image).
+        _region_size - specifies the size of the non-overlapping regions into which the LBP feature image will be divided for texture recognition.
+
+    @returns:
+        regions - nested list that represents the divided image.
+    """
+    rows, cols = _lbp.shape
     region_rows, region_cols = _region_size
 
     divided_rows = rows // region_rows
     divided_cols = cols // region_cols
 
-    regions = np.split(lbp, divided_rows, axis=0)
+    regions = np.split(_lbp, divided_rows, axis=0)
     regions = [np.split(region, divided_cols, axis=1) for region in regions]
 
     return regions
 
 
 def compute_histogram(_region):
+    """
+    @param:
+        _region - 2D NumPy array representing the LBP values for the region.
+
+    @returns:
+        hist - normalized histogram as 1D NumPy array.
+    """
     hist, _ = np.histogram(_region, bins=256, range=(0, 255))
 
     hist = hist.astype("float")
     hist /= (hist.sum() + 1e-7)
 
     return hist
+
+
+def threshold_histogram(_histogram, _threshold_factor):
+    """
+    @param:
+        _histogram - the histogram of LBP values for a given region of an image.
+        _threshold_factor - the fraction of the maximum histogram value to use as the threshold.
+
+    @returns:
+        binary_array - the thresholded histogram as a binary array.
+    """
+
+    max_value= max(_histogram)
+
+    threshold_value= _threshold_factor * max_value
+
+
+    binary_array= np.zeros(len(_histogram))
+    for i in range(len(_histogram)):
+        if _histogram[i]>= threshold_value:
+            binary_array = 1
+
+    return binary_array
 
 
 if __name__=="__main__":
@@ -68,12 +109,23 @@ if __name__=="__main__":
 
     regions = divide_into_regions(lbp, region_size)
 
-    histograms= []
+
     for region in regions:
         histogram = compute_histogram(region)
         histograms.append(histogram)
 
 
+    # The third step is to apply a noise-resistant thresholding technique 
+    # to the LBP histograms. In this step, 
+    # we use a thresholding technique that is robust to image noise. 
+    # The thresholding technique sets the bin 
+    # with the maximum count to 1 and all other bins to 0. 
+    # This technique reduces the influence of noise on the LBP histograms 
+    # and enhances the discriminative power of the LBP features.
+
+    for histogram in histograms:
+        thresholded_histogram= threshold_histogram(histogram, threshold_factor)
+        thresholded_histograms.append(thresholded_histogram)
 
     cv2.imshow('Original', img)                                 # Image Display ORIGINAL
     cv2.imshow('Blurred', blurred)                              # Image Display BLURRED
