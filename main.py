@@ -1,5 +1,7 @@
 import cv2
 from skimage.feature import local_binary_pattern
+from sklearn.svm import LinearSVC
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 import numpy as np
 
 dimensions = (400, 400)
@@ -8,7 +10,7 @@ region_width = 20
 region_size = (region_height, region_width)
 histograms= []
 thresholded_histograms= []
-threshold_factor = 0.3
+threshold_factor = 0.5
 
 
 
@@ -74,7 +76,7 @@ def threshold_histogram(_histogram, _threshold_factor):
 
 if __name__=="__main__":
 
-    img = cv2.imread('assets/images/image_1.jpeg')              # Reading Image from source; can also be a url
+    img = cv2.imread('assets/images/image_3.jpeg')              # Reading Image from source; can also be a url
     img = cv2.resize(img, dimensions)
 
 
@@ -127,11 +129,45 @@ if __name__=="__main__":
         thresholded_histogram= threshold_histogram(histogram, threshold_factor)
         thresholded_histograms.append(thresholded_histogram)
 
-    cv2.imshow('Original', img)                                 # Image Display ORIGINAL
-    cv2.imshow('Blurred', blurred)                              # Image Display BLURRED
-    cv2.imshow('LBP', lbp)                                      # Image Display LBP Feature Extracted
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()        
+    print(thresholded_histograms)
+    labels=[]
+    for i in range(len(thresholded_histograms)):
+        labels.append(i)
+
+
+    thresholded_histograms=np.array(thresholded_histograms)
+    thresholded_histograms=thresholded_histograms.reshape(1, -1)
+    labels=np.array(labels)
+    thresholded_histograms = np.repeat(thresholded_histograms, 20, axis=0)
+    #   Classifying texture patterns
+    X_train= thresholded_histograms
+    y_train= labels
+    svm= LinearSVC()
+    svm.fit(X_train, y_train)
+
+    # Test the classifier on a new image
+    test_img = cv2.imread('assets/images/image_4.jpeg')
+    test_gray = cv2.cvtColor(test_img, cv2.COLOR_BGR2GRAY)
+    test_median = cv2.medianBlur(test_gray, 7)
+    test_lbp = local_binary_pattern(test_median, n_points, radius)
+    test_regions = divide_into_regions(test_lbp, region_size)
+    test_histograms = []
+    for region in test_regions:
+        histogram = compute_histogram(region)
+        test_histograms.append(histogram)
+    test_thresholded_histograms = []
+    for histogram in test_histograms:
+        thresholded_histogram = threshold_histogram(histogram, threshold_factor)
+        test_thresholded_histograms.append(thresholded_histogram)
+    X_test = np.array(test_thresholded_histograms)
+    y_test = svm.predict(X_test)
+    print(y_test)
+
+    # cv2.imshow('Original', img)                                 # Image Display ORIGINAL
+    # cv2.imshow('Blurred', blurred)                              # Image Display BLURRED
+    # cv2.imshow('LBP', lbp)                                      # Image Display LBP Feature Extracted
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()        
 
 
     ### Dataset: Outex_1, Outsex_2;
