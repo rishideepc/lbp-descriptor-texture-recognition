@@ -2,7 +2,6 @@ import cv2
 from skimage.feature import local_binary_pattern
 from sklearn.svm import LinearSVC, SVC
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 import numpy as np
 import os
 
@@ -98,7 +97,7 @@ if __name__=="__main__":
             thresholded_regions.append(histogram)
         thresholded_image= np.concatenate(thresholded_regions)
         thresholded_images.append(thresholded_image)
-    thresholded_images= np.array(thresholded_images)
+    thresholded_images= np.array(thresholded_images) # feature list
     for i in range(len(thresholded_images)):
         labels.append(f'texture{i+1}')
     labels= np.array(labels)
@@ -111,7 +110,4 @@ if __name__=="__main__":
 
     y_pred = model.predict(X_test)
 
-    print('\n', y_pred)
-    print('\n', y_test)
-
-    print(confusion_matrix(y_test, y_pred))
+    print('\n', y_pred, "\n")
