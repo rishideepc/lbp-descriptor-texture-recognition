@@ -9,10 +9,10 @@ import os
 dimensions = (64, 64)
 radius= 1                                                   
 n_points= 8 * radius
-region_size= 32
-threshold_factor = 0.5
+region_size= 20
+threshold_factor = 0.3
 labels= []
-counter=0
+
 
 def divide_into_regions(_lbp, _region_size):
     """
@@ -48,6 +48,7 @@ def threshold_histogram(_histogram, _threshold_factor):
 
     threshold = _threshold_factor * np.mean(_histogram)
     _histogram[_histogram < threshold] = 0
+    _histogram[_histogram >= threshold] = 1
     return _histogram
 
 
@@ -57,14 +58,12 @@ if __name__=="__main__":
     dataset_path=  "assets/textures/"
     images= []
     for filename in os.listdir(dataset_path):
-        counter+=1
         img= cv2.imread(os.path.join(dataset_path, filename))
         img= cv2.resize(img, dimensions)
         images.append(img)
-        labels.append(counter)
 
-    images= np.array(images)
-    labels= np.array(labels)
+
+    # images= np.array(images)
 
 
     #   Converting images to grayscale
@@ -73,7 +72,7 @@ if __name__=="__main__":
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         gray_images.append(gray)
 
-    gray_images= np.array(gray_images)
+    # gray_images= np.array(gray_images)
 
     
     #   Extracting LBP features from grayscale images
@@ -82,21 +81,27 @@ if __name__=="__main__":
         lbp = local_binary_pattern(gray, n_points, radius, method='uniform')
         lbp_images.append(lbp)
 
-    lbp_images= np.array(lbp_images)
+    # lbp_images= np.array(lbp_images)
 
 
     #   Applying noise-resistant thresholding to LBP images
     thresholded_images= []
+    #   Looping through each lbp image
     for lbp in lbp_images:
         regions= divide_into_regions(lbp, region_size)
         thresholded_regions= []
+        #   Looping through each region of an lbp image
         for region in regions:
             histogram, _= np.histogram(region, bins=np.arange(0, 10), density=True)
             histogram = threshold_histogram(histogram, threshold_factor)
+            # print(histogram)
             thresholded_regions.append(histogram)
         thresholded_image= np.concatenate(thresholded_regions)
         thresholded_images.append(thresholded_image)
     thresholded_images= np.array(thresholded_images)
+    for i in range(len(thresholded_images)):
+        labels.append(f'texture{i+1}')
+    labels= np.array(labels)
     
 
     #   Classifying the Texture Pattern
@@ -105,5 +110,8 @@ if __name__=="__main__":
     model.fit(X_train, y_train)
 
     y_pred = model.predict(X_test)
+
+    print('\n', y_pred)
+    print('\n', y_test)
 
     print(confusion_matrix(y_test, y_pred))
