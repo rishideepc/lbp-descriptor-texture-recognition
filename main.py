@@ -112,6 +112,3 @@ if __name__=="__main__":
     y_pred = model.predict(X_test)
 
     print('\n', y_pred)
-    print('\n', y_test)
-
-    print(confusion_matrix(y_test, y_pred))
